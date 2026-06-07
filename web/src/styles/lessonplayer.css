@@ -1,0 +1,507 @@
+/* Lesson Player Overlay */
+.lesson-player-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.lesson-player {
+  background: white;
+  border-radius: 20px;
+  width: 90%;
+  max-width: 650px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+  from { transform: translateY(50px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+/* Player Header */
+.player-header {
+  padding: 25px 30px 15px;
+  border-bottom: 1px solid #eee;
+  position: relative;
+}
+
+.player-header h2 {
+  margin: 0 0 15px 0;
+  color: #333;
+  font-size: 1.5em;
+  text-align: center;
+}
+
+.close-btn {
+  position: absolute;
+  top: 15px;
+  right: 20px;
+  background: none;
+  border: none;
+  font-size: 1.5em;
+  cursor: pointer;
+  color: #999;
+  width: 35px;
+  height: 35px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.close-btn:hover {
+  background: #f0f0f0;
+  color: #333;
+}
+
+/* Progress Bar */
+.progress-bar {
+  width: 100%;
+  height: 8px;
+  background: #e9ecef;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #667eea, #764ba2);
+  border-radius: 4px;
+  transition: width 0.5s ease;
+}
+
+.progress-text {
+  text-align: center;
+  margin-top: 8px;
+  font-size: 0.9em;
+  color: #888;
+}
+
+/* Player Body */
+.player-body {
+  padding: 30px;
+}
+
+/* Exercise Common */
+.exercise {
+  text-align: center;
+}
+
+.exercise-instruction {
+  font-size: 1em;
+  color: #888;
+  margin-bottom: 15px;
+  font-weight: 500;
+}
+
+.exercise-prompt {
+  font-size: 1.8em;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 30px;
+  line-height: 1.4;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+}
+
+/* Hint Words */
+.hint-word {
+  position: relative;
+  cursor: help;
+  padding: 4px 8px;
+  border-radius: 6px;
+  transition: background 0.2s;
+  display: inline-block;
+}
+
+.hint-word:hover {
+  background: #f0e6ff;
+}
+
+.hint-tooltip {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #333;
+  color: white;
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-size: 0.5em;
+  font-weight: normal;
+  white-space: nowrap;
+  z-index: 10;
+  animation: tooltipIn 0.2s ease;
+  pointer-events: none;
+}
+
+.hint-tooltip::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 6px solid transparent;
+  border-top-color: #333;
+}
+
+@keyframes tooltipIn {
+  from { opacity: 0; transform: translateX(-50%) translateY(5px); }
+  to { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
+/* Type Exercise */
+.type-input {
+  width: 100%;
+  padding: 16px 20px;
+  font-size: 1.2em;
+  border: 2px solid #ddd;
+  border-radius: 12px;
+  outline: none;
+  transition: all 0.3s;
+  text-align: center;
+}
+
+.type-input:focus {
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15);
+}
+
+.type-input.correct {
+  border-color: #28a745;
+  background: #d4edda;
+}
+
+.type-input.wrong {
+  border-color: #dc3545;
+  background: #f8d7da;
+  animation: shake 0.4s ease;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-8px); }
+  75% { transform: translateX(8px); }
+}
+
+.check-btn {
+  display: block;
+  width: 100%;
+  margin-top: 20px;
+  padding: 14px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-size: 1.1em;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.check-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+}
+
+.check-btn:active {
+  transform: translateY(0);
+}
+
+.check-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* Feedback */
+.feedback {
+  margin-top: 15px;
+  padding: 12px;
+  border-radius: 10px;
+  font-weight: bold;
+  font-size: 1.1em;
+  animation: popIn 0.3s ease;
+}
+
+@keyframes popIn {
+  from { transform: scale(0.8); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+.feedback.correct {
+  background: #d4edda;
+  color: #155724;
+}
+
+.feedback.wrong {
+  background: #f8d7da;
+  color: #721c24;
+}
+
+/* Drag and Drop Exercise */
+.drop-zone {
+  min-height: 60px;
+  border: 2px dashed #ccc;
+  border-radius: 12px;
+  padding: 15px;
+  margin-bottom: 15px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s;
+}
+
+.drop-zone:hover {
+  border-color: #667eea;
+}
+
+.placed-zone {
+  background: #f8f9ff;
+  border-color: #667eea;
+  min-height: 70px;
+}
+
+.available-zone {
+  background: #f8f8f8;
+  min-height: 60px;
+}
+
+.placeholder {
+  color: #aaa;
+  font-style: italic;
+  font-size: 0.95em;
+}
+
+.drag-word {
+  display: inline-block;
+  padding: 10px 18px;
+  border-radius: 10px;
+  font-size: 1.1em;
+  font-weight: 600;
+  cursor: grab;
+  user-select: none;
+  transition: all 0.2s;
+}
+
+.drag-word:active {
+  cursor: grabbing;
+  transform: scale(1.1);
+}
+
+.drag-word.available {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  box-shadow: 0 3px 10px rgba(102, 126, 234, 0.3);
+}
+
+.drag-word.available:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 15px rgba(102, 126, 234, 0.4);
+}
+
+.drag-word.placed {
+  background: #e8f4fd;
+  color: #333;
+  border: 2px solid #667eea;
+}
+
+.drag-word.placed:hover {
+  background: #ffecec;
+  border-color: #dc3545;
+}
+
+/* Lesson Complete Screen */
+.lesson-complete {
+  text-align: center;
+  padding: 40px 20px;
+}
+
+.complete-icon {
+  font-size: 4em;
+  margin-bottom: 20px;
+  animation: bounce 0.6s ease;
+}
+
+@keyframes bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-20px); }
+}
+
+.lesson-complete h3 {
+  font-size: 2em;
+  color: #333;
+  margin: 0 0 15px 0;
+}
+
+.score-text {
+  font-size: 1.3em;
+  color: #667eea;
+  margin-bottom: 30px;
+}
+
+.finish-btn {
+  padding: 16px 40px;
+  background: linear-gradient(135deg, #28a745, #20c997);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-size: 1.2em;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.finish-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px rgba(40, 167, 69, 0.4);
+}
+
+/* Responsive - fully adaptive */
+@media (max-width: 768px) {
+  .lesson-player {
+    width: 95%;
+    max-height: 95vh;
+    max-height: 95dvh;
+    border-radius: 15px;
+  }
+
+  .player-body {
+    padding: 20px;
+  }
+
+  .exercise-prompt {
+    font-size: clamp(1.2em, 4vw, 1.4em);
+  }
+
+  .type-input {
+    font-size: 1em;
+    padding: 14px 16px;
+  }
+
+  .drag-word {
+    padding: 8px 14px;
+    font-size: 1em;
+  }
+}
+
+@media (max-width: 480px) {
+  .lesson-player-overlay {
+    align-items: flex-end;
+    padding: 0;
+  }
+
+  .lesson-player {
+    width: 100%;
+    max-height: 100vh;
+    max-height: 100dvh;
+    border-radius: 16px 16px 0 0;
+    margin: 0;
+  }
+
+  .player-header {
+    padding: 12px 16px 10px;
+    position: sticky;
+    top: 0;
+    background: white;
+    z-index: 2;
+  }
+
+  .player-header h2 {
+    font-size: 1.1em;
+    padding-right: 30px;
+  }
+
+  .close-btn {
+    top: 10px;
+    right: 12px;
+    width: 30px;
+    height: 30px;
+  }
+
+  .player-body {
+    padding: 16px;
+  }
+
+  .exercise-prompt {
+    font-size: 1.2em;
+    margin-bottom: 20px;
+  }
+
+  .type-input {
+    padding: 12px;
+    font-size: 1em;
+  }
+
+  .check-btn {
+    padding: 12px;
+    font-size: 1em;
+  }
+
+  .drag-word {
+    padding: 6px 10px;
+    font-size: 0.9em;
+  }
+
+  .drop-zone {
+    min-height: 50px;
+    padding: 10px;
+    gap: 6px;
+  }
+
+  .feedback {
+    font-size: 0.95em;
+    padding: 10px;
+  }
+
+  .lesson-complete h3 {
+    font-size: 1.5em;
+  }
+
+  .complete-icon {
+    font-size: 3em;
+  }
+
+  .score-text {
+    font-size: 1.1em;
+  }
+
+  .finish-btn {
+    padding: 14px 30px;
+    font-size: 1em;
+    width: 100%;
+  }
+}
+
+/* Large screens */
+@media (min-width: 1200px) {
+  .lesson-player {
+    max-width: 700px;
+  }
+
+  .exercise-prompt {
+    font-size: 2em;
+  }
+}

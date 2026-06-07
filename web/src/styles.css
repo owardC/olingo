@@ -1,0 +1,85 @@
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; min-height: 100dvh; color: #333; }
+
+.app { width: 100%; max-width: 1200px; margin: clamp(4px, 2vw, 20px) auto; padding: clamp(8px, 2vw, 24px); background: white; border-radius: clamp(8px, 2vw, 16px); box-shadow: 0 8px 32px rgba(20,20,40,0.2); overflow-x: hidden; }
+
+.header { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: clamp(12px, 3vw, 24px); border-bottom: 2px solid #f0f0f0; padding-bottom: 12px; flex-wrap: wrap; }
+.header h1 { margin: 0; color: #667eea; font-size: clamp(20px, 4vw, 28px); flex-shrink: 0; }
+.header-right { display: flex; gap: 12px; align-items: center; flex: 1; justify-content: flex-end; flex-wrap: wrap; }
+
+.stats { display: flex; gap: clamp(6px, 1.5vw, 16px); flex-wrap: wrap; }
+.stat-item { display: flex; gap: 6px; align-items: center; background: #f5f5f5; padding: clamp(4px, 1vw, 8px) clamp(8px, 1.5vw, 12px); border-radius: 8px; }
+.stat-label { font-size: clamp(10px, 1.5vw, 12px); color: #666; font-weight: 500; }
+.stat-value { font-size: clamp(14px, 2vw, 18px); font-weight: 700; color: #667eea; }
+
+.user-info { display: flex; gap: 12px; align-items: center; }
+.user-info span { font-size: 14px; color: #666; }
+.logout-btn, .complete-btn, .toggle-mode { background: #667eea; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 14px; transition: all 0.3s; }
+.logout-btn:hover, .complete-btn:hover, .toggle-mode:hover { background: #764ba2; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(102,126,234,0.3); }
+
+.auth-container { display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 16px; }
+.auth-box { background: white; padding: 40px; border-radius: 16px; box-shadow: 0 8px 32px rgba(20,20,40,0.2); width: 100%; max-width: 380px; }
+.auth-box h2 { text-align: center; color: #667eea; margin-top: 0; }
+.auth-box input { width: 100%; padding: 12px; margin-bottom: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; transition: all 0.3s; }
+.auth-box input:focus { outline: none; border-color: #667eea; box-shadow: 0 0 0 3px rgba(102,126,234,0.1); }
+.auth-box button[type="submit"] { width: 100%; padding: 12px; background: #667eea; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 600; }
+.auth-box button[type="submit"]:hover { background: #764ba2; }
+.toggle-auth { background: none; border: none; color: #667eea; cursor: pointer; text-decoration: underline; font-size: 14px; margin-top: 16px; width: 100%; }
+.toggle-auth:hover { color: #764ba2; }
+.error { color: #e74c3c; font-size: 14px; text-align: center; margin: 12px 0 0 0; }
+
+.controls { display: flex; gap: 10px; align-items: center; margin-bottom: 16px; flex-wrap: wrap; }
+.controls label { display: flex; gap: 6px; align-items: center; font-size: clamp(12px, 2vw, 14px); }
+.controls select { padding: 8px 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; cursor: pointer; min-width: 0; max-width: 100%; }
+.toggle-mode { white-space: nowrap; }
+
+.roadmap { display: flex; gap: 12px; margin-top: 18px; flex-wrap: wrap; }
+.level { padding: 12px 20px; border-radius: 8px; background: linear-gradient(135deg, #eef 0%, #dde 100%); cursor: pointer; transition: all 0.3s; border: 2px solid transparent; }
+.level:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(102,126,234,0.2); }
+
+.lesson { padding: 16px; border: 1px solid #eee; border-radius: 8px; margin-bottom: 12px; background: #f9f9f9; transition: all 0.3s; }
+.lesson:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+.lesson strong { color: #667eea; display: block; margin-bottom: 8px; font-size: 16px; }
+.lesson div { font-size: 14px; color: #555; margin-bottom: 4px; }
+.lesson .complete-btn { margin-top: 12px; }
+
+.flashcards-container { padding: 20px; text-align: center; }
+.flashcard-progress { font-size: 14px; color: #667eea; margin-bottom: 16px; font-weight: 600; }
+.flashcard { width: 100%; max-width: 400px; margin: 0 auto 24px; height: 250px; cursor: pointer; perspective: 1000px; }
+.flashcard-inner { position: relative; width: 100%; height: 100%; transition: transform 0.6s; transform-style: preserve-3d; }
+.flashcard.flipped .flashcard-inner { transform: rotateY(180deg); }
+.flashcard-front, .flashcard-back { position: absolute; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 12px; font-size: 24px; font-weight: 600; backface-visibility: hidden; padding: 20px; text-align: center; box-shadow: 0 8px 16px rgba(102,126,234,0.3); }
+.flashcard-back { transform: rotateY(180deg); }
+.flashcard-hint { font-size: 12px; color: #999; margin: 0; }
+.quality-buttons { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
+.quality-btn { padding: 10px 16px; border: 2px solid #ddd; background: white; border-radius: 6px; cursor: pointer; font-size: 14px; transition: all 0.3s; }
+.quality-btn:hover { transform: scale(1.05); }
+.q0:hover { border-color: #e74c3c; color: #e74c3c; }
+.q2:hover { border-color: #f39c12; color: #f39c12; }
+.q3:hover { border-color: #27ae60; color: #27ae60; }
+.q5:hover { border-color: #667eea; color: #667eea; }
+
+@media (max-width: 768px) {
+  .header { flex-direction: column; align-items: stretch; }
+  .header-right { justify-content: space-between; width: 100%; }
+  .stats { width: 100%; justify-content: space-around; }
+  .user-info { width: 100%; justify-content: space-between; }
+  .controls { flex-direction: row; flex-wrap: wrap; }
+  .controls label { flex: 1; min-width: 120px; }
+  .controls select { width: 100%; }
+  .toggle-mode { flex: 1; min-width: 120px; }
+  .flashcard { height: 200px; }
+  .flashcard-front, .flashcard-back { font-size: 18px; padding: 12px; }
+  .quality-buttons { gap: 4px; }
+  .quality-btn { padding: 8px 12px; font-size: 12px; }
+}
+
+@media (max-width: 480px) {
+  .app { margin: 2px; border-radius: 10px; }
+  .header-right { gap: 8px; }
+  .user-info span { font-size: 12px; max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .flashcard { height: 180px; max-width: 90vw; }
+  .quality-buttons { gap: 2px; }
+  .quality-btn { padding: 6px 8px; font-size: 11px; }
+}

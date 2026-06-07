@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: olingo-api
+    runtime: node
+    plan: free
+    buildCommand: cd api && npm install
+    startCommand: cd api && node index.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: JWT_SECRET
+        generateValue: true
+    disk:
+      name: olingo-data
+      mountPath: /opt/render/project/src/api/data
+      sizeGB: 1
