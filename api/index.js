@@ -1,10 +1,9 @@
 const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
-const path = require('path');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
-const db = require('./db');
+const { pool, initializeDB, seedLessons } = require('./db');
 
 const app = express();
 app.use(cors());
@@ -13,64 +12,48 @@ app.use(bodyParser.json());
 const PORT = process.env.PORT || 4000;
 const JWT_SECRET = process.env.JWT_SECRET || 'olingo-dev-secret-key-change-in-prod';
 
-// Middleware to verify JWT token
 function verifyToken(req, res, next) {
   const token = req.headers.authorization?.split(' ')[1];
   if (!token) return res.status(401).json({ error: 'Missing token' });
-  
   try {
-    const decoded = jwt.verify(token, JWT_SECRET);
-    req.user = decoded;
+    req.user = jwt.verify(token, JWT_SECRET);
     next();
   } catch (err) {
     res.status(401).json({ error: 'Invalid token' });
   }
 }
 
-// Sign up new user
-app.post('/api/signup', (req, res) => {
+app.post('/api/signup', async (req, res) => {
   const { email, password } = req.body;
-  if (!email || !password) {
-    return res.status(400).json({ error: 'Email and password required' });
-  }
-  
+  if (!email || !password) return res.status(400).json({ error: 'Email and password required' });
   try {
     const hash = bcrypt.hashSync(password, 10);
-    const stmt = db.prepare('INSERT INTO users (email, password_hash) VALUES (?, ?)');
-    const result = stmt.run(email, hash);
-    const user_id = result.lastInsertRowid;
-    
-    // Initialize beginner level for both languages
-    const levelStmt = db.prepare('INSERT INTO user_levels (user_id, language, level) VALUES (?, ?, ?)');
-    levelStmt.run(user_id, 'vietnamese', 'beginner');
-    levelStmt.run(user_id, 'venezuelan_spanish', 'beginner');
-    
+    const result = await pool.query(
+      'INSERT INTO users (email, password_hash) VALUES ($1, $2) RETURNING id',
+      [email, hash]
+    );
+    const user_id = result.rows[0].id;
+    await pool.query(
+      'INSERT INTO user_levels (user_id, language, level) VALUES ($1, $2, $3), ($1, $4, $5)',
+      [user_id, 'vietnamese', 'beginner', 'venezuelan_spanish', 'beginner']
+    );
     const token = jwt.sign({ user_id, email }, JWT_SECRET, { expiresIn: '30d' });
     res.json({ ok: true, user_id, token });
   } catch (err) {
-    if (err.message.includes('UNIQUE')) {
-      return res.status(400).json({ error: 'Email already exists' });
-    }
+    if (err.code === '23505') return res.status(400).json({ error: 'Email already exists' });
     console.error(err);
     res.status(500).json({ error: err.message });
   }
 });
 
-// Login
-app.post('/api/login', (req, res) => {
+app.post('/api/login', async (req, res) => {
   const { email, password } = req.body;
-  if (!email || !password) {
-    return res.status(400).json({ error: 'Email and password required' });
-  }
-  
+  if (!email || !password) return res.status(400).json({ error: 'Email and password required' });
   try {
-    const stmt = db.prepare('SELECT id, password_hash FROM users WHERE email = ?');
-    const user = stmt.get(email);
+    const result = await pool.query('SELECT id, password_hash FROM users WHERE email = $1', [email]);
+    const user = result.rows[0];
     if (!user) return res.status(401).json({ error: 'Invalid credentials' });
-    
-    const valid = bcrypt.compareSync(password, user.password_hash);
-    if (!valid) return res.status(401).json({ error: 'Invalid credentials' });
-    
+    if (!bcrypt.compareSync(password, user.password_hash)) return res.status(401).json({ error: 'Invalid credentials' });
     const token = jwt.sign({ user_id: user.id, email }, JWT_SECRET, { expiresIn: '30d' });
     res.json({ ok: true, user_id: user.id, token });
   } catch (err) {
@@ -79,48 +62,46 @@ app.post('/api/login', (req, res) => {
   }
 });
 
-// Get user progress
-app.get('/api/progress/:language', verifyToken, (req, res) => {
-  const { language } = req.params;
+app.get('/api/progress/:language', verifyToken, async (req, res) => {
   try {
-    const stmt = db.prepare('SELECT * FROM progress WHERE user_id = ? AND language = ? ORDER BY completed_at DESC');
-    const progress = stmt.all(req.user.user_id, language);
-    res.json({ progress });
+    const result = await pool.query(
+      'SELECT * FROM progress WHERE user_id = $1 AND language = $2 ORDER BY completed_at DESC',
+      [req.user.user_id, req.params.language]
+    );
+    res.json({ progress: result.rows });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: err.message });
   }
 });
 
-// Get user unlocked levels
-app.get('/api/user/levels', verifyToken, (req, res) => {
+app.get('/api/user/levels', verifyToken, async (req, res) => {
   try {
-    const stmt = db.prepare('SELECT language, level FROM user_levels WHERE user_id = ? ORDER BY language, level');
-    const levels = stmt.all(req.user.user_id);
-    res.json({ levels });
+    const result = await pool.query(
+      'SELECT language, level FROM user_levels WHERE user_id = $1 ORDER BY language, level',
+      [req.user.user_id]
+    );
+    res.json({ levels: result.rows });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: err.message });
   }
 });
 
-app.get('/api/lessons', (req, res) => {
+app.get('/api/lessons', async (req, res) => {
   const { lang = 'vietnamese' } = req.query;
   const key = lang === 'spanish' || lang === 'venezuelan_spanish' ? 'venezuelan_spanish' : 'vietnamese';
-  
   try {
-    // Return all 180 lessons in sequence (beginner 1-30, intermediate 31-60, expert 61-90)
-    const stmt = db.prepare(`
-      SELECT * FROM lessons 
-      WHERE language = ? 
-      ORDER BY CASE level WHEN 'beginner' THEN 1 WHEN 'intermediate' THEN 2 WHEN 'expert' THEN 3 END, id
-    `);
-    const rows = stmt.all(key);
-    const lessons = rows.map((row, index) => ({
+    const result = await pool.query(
+      `SELECT * FROM lessons WHERE language = $1 
+       ORDER BY CASE level WHEN 'beginner' THEN 1 WHEN 'intermediate' THEN 2 WHEN 'expert' THEN 3 END, id`,
+      [key]
+    );
+    const lessons = result.rows.map((row, index) => ({
       ...row,
-      sequence: index + 1,  // 1-180 for board game display
+      sequence: index + 1,
       phrases: JSON.parse(row.phrases),
-      difficulty: Math.ceil((index + 1) / 60)  // 1-3 stars based on position
+      difficulty: Math.ceil((index + 1) / 30)
     }));
     res.json({ lessons });
   } catch (err) {
@@ -138,69 +119,44 @@ app.get('/api/roadmap', (req, res) => {
   });
 });
 
-// Get flashcards for a lesson
-app.get('/api/flashcards/:lesson_id', (req, res) => {
-  const { lesson_id } = req.params;
+app.get('/api/flashcards/:lesson_id', async (req, res) => {
   try {
-    const stmt = db.prepare('SELECT * FROM flashcards WHERE lesson_id = ?');
-    const cards = stmt.all(lesson_id);
-    res.json({ flashcards: cards });
+    const result = await pool.query('SELECT * FROM flashcards WHERE lesson_id = $1', [req.params.lesson_id]);
+    res.json({ flashcards: result.rows });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: err.message });
   }
 });
 
-// Update flashcard review (spaced repetition)
-app.post('/api/flashcard-review', verifyToken, (req, res) => {
-  const { flashcard_id, quality } = req.body; // quality: 0-5 (0=fail, 5=perfect)
-  if (!flashcard_id || quality === undefined) {
-    return res.status(400).json({ error: 'Missing required fields' });
-  }
-  
+app.post('/api/flashcard-review', verifyToken, async (req, res) => {
+  const { flashcard_id, quality } = req.body;
+  if (!flashcard_id || quality === undefined) return res.status(400).json({ error: 'Missing required fields' });
   try {
-    // Get or create progress record
-    let progressStmt = db.prepare('SELECT * FROM user_flashcard_progress WHERE user_id = ? AND flashcard_id = ?');
-    let progress = progressStmt.get(req.user.user_id, flashcard_id);
-    
-    if (!progress) {
-      // Create new record
-      const createStmt = db.prepare('INSERT INTO user_flashcard_progress (user_id, flashcard_id) VALUES (?, ?)');
-      createStmt.run(req.user.user_id, flashcard_id);
-      progress = progressStmt.get(req.user.user_id, flashcard_id);
+    let result = await pool.query(
+      'SELECT * FROM user_flashcard_progress WHERE user_id = $1 AND flashcard_id = $2',
+      [req.user.user_id, flashcard_id]
+    );
+    if (result.rows.length === 0) {
+      await pool.query('INSERT INTO user_flashcard_progress (user_id, flashcard_id) VALUES ($1, $2)', [req.user.user_id, flashcard_id]);
+      result = await pool.query('SELECT * FROM user_flashcard_progress WHERE user_id = $1 AND flashcard_id = $2', [req.user.user_id, flashcard_id]);
     }
-    
-    // SM-2 algorithm
-    const { interval, ease_factor, repetitions } = progress;
-    let newInterval = interval;
-    let newEase = ease_factor;
-    let newReps = repetitions;
-    
+    const progress = result.rows[0];
+    let newInterval = progress.interval, newEase = progress.ease_factor, newReps = progress.repetitions;
     if (quality >= 3) {
-      newReps = repetitions + 1;
+      newReps++;
       if (newReps === 1) newInterval = 1;
       else if (newReps === 2) newInterval = 3;
-      else newInterval = Math.round(interval * ease_factor);
-    } else {
-      newInterval = 1;
-      newReps = 0;
-    }
-    
-    newEase = Math.max(1.3, ease_factor + (0.1 - (5 - quality) * (0.08 + (5 - quality) * 0.02)));
-    
-    const nextReview = new Date(Date.now() + newInterval * 24 * 60 * 60 * 1000);
-    const updateStmt = db.prepare(`
-      UPDATE user_flashcard_progress 
-      SET interval = ?, ease_factor = ?, repetitions = ?, next_review = ?, last_reviewed = CURRENT_TIMESTAMP
-      WHERE user_id = ? AND flashcard_id = ?
-    `);
-    updateStmt.run(newInterval, newEase, newReps, nextReview.toISOString(), req.user.user_id, flashcard_id);
-    
-    // Award XP based on quality
+      else newInterval = Math.round(progress.interval * progress.ease_factor);
+    } else { newInterval = 1; newReps = 0; }
+    newEase = Math.max(1.3, progress.ease_factor + (0.1 - (5 - quality) * (0.08 + (5 - quality) * 0.02)));
+    const nextReview = new Date(Date.now() + newInterval * 86400000);
+    await pool.query(
+      'UPDATE user_flashcard_progress SET interval=$1, ease_factor=$2, repetitions=$3, next_review=$4, last_reviewed=NOW() WHERE user_id=$5 AND flashcard_id=$6',
+      [newInterval, newEase, newReps, nextReview.toISOString(), req.user.user_id, flashcard_id]
+    );
     const xpAward = quality >= 3 ? 5 : 1;
-    const xpStmt = db.prepare('UPDATE users SET xp = xp + ?, streak = streak + 1 WHERE id = ?');
-    xpStmt.run(xpAward, req.user.user_id);
-    
+    await pool.query('UPDATE users SET xp = xp + $1, streak = streak + 1 WHERE id = $2', [xpAward, req.user.user_id]);
     res.json({ ok: true, interval: newInterval, xp_awarded: xpAward });
   } catch (err) {
     console.error(err);
@@ -208,51 +164,40 @@ app.post('/api/flashcard-review', verifyToken, (req, res) => {
   }
 });
 
-// Get user stats (XP, streak, level)
-app.get('/api/user/stats', verifyToken, (req, res) => {
+app.get('/api/user/stats', verifyToken, async (req, res) => {
   try {
-    const stmt = db.prepare('SELECT xp, streak, email FROM users WHERE id = ?');
-    const user = stmt.get(req.user.user_id);
-    const level = Math.floor(user.xp / 100) + 1; // Level based on XP
-    res.json({ xp: user.xp, streak: user.streak, level, email: user.email });
+    const result = await pool.query('SELECT xp, streak, email FROM users WHERE id = $1', [req.user.user_id]);
+    const user = result.rows[0];
+    res.json({ xp: user.xp, streak: user.streak, level: Math.floor(user.xp / 100) + 1, email: user.email });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: err.message });
   }
 });
 
-// Get user's due flashcards (for review)
-app.get('/api/flashcards-due', verifyToken, (req, res) => {
+app.get('/api/flashcards-due', verifyToken, async (req, res) => {
   try {
-    const stmt = db.prepare(`
-      SELECT fc.* FROM flashcards fc
-      JOIN user_flashcard_progress ufp ON fc.id = ufp.flashcard_id
-      WHERE ufp.user_id = ? AND ufp.next_review <= CURRENT_TIMESTAMP
-      LIMIT 20
-    `);
-    const cards = stmt.all(req.user.user_id);
-    res.json({ flashcards: cards });
+    const result = await pool.query(
+      `SELECT fc.* FROM flashcards fc JOIN user_flashcard_progress ufp ON fc.id = ufp.flashcard_id
+       WHERE ufp.user_id = $1 AND ufp.next_review <= NOW() LIMIT 20`,
+      [req.user.user_id]
+    );
+    res.json({ flashcards: result.rows });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: err.message });
   }
 });
 
-// Post progress (requires auth)
-app.post('/api/progress', verifyToken, (req, res) => {
+app.post('/api/progress', verifyToken, async (req, res) => {
   const { lesson_id, language, level } = req.body;
-  if (!lesson_id || !language || !level) {
-    return res.status(400).json({ error: 'Missing required fields' });
-  }
-  
+  if (!lesson_id || !language || !level) return res.status(400).json({ error: 'Missing required fields' });
   try {
-    const stmt = db.prepare('INSERT INTO progress (user_id, lesson_id, language, level) VALUES (?, ?, ?, ?)');
-    stmt.run(req.user.user_id, lesson_id, language, level);
-    
-    // Award 10 XP for completing lesson
-    const xpStmt = db.prepare('UPDATE users SET xp = xp + 10 WHERE id = ?');
-    xpStmt.run(req.user.user_id);
-    
+    await pool.query(
+      'INSERT INTO progress (user_id, lesson_id, language, level) VALUES ($1, $2, $3, $4)',
+      [req.user.user_id, lesson_id, language, level]
+    );
+    await pool.query('UPDATE users SET xp = xp + 10 WHERE id = $1', [req.user.user_id]);
     res.json({ ok: true });
   } catch (err) {
     console.error(err);
@@ -260,7 +205,10 @@ app.post('/api/progress', verifyToken, (req, res) => {
   }
 });
 
-app.listen(PORT, () => {
-  console.log(`Olingo API running on http://localhost:${PORT}`);
-});
+async function start() {
+  await initializeDB();
+  await seedLessons();
+  app.listen(PORT, () => console.log(`Olingo API running on http://localhost:${PORT}`));
+}
 
+start().catch(err => { console.error('Failed to start:', err); process.exit(1); });

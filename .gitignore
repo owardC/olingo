@@ -3,5 +3,5 @@ dist
 .env
 /.turbo
 /.cache
-api/data/
+api/data/*.db
 *.db
