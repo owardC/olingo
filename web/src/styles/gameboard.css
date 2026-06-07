@@ -1,256 +1,270 @@
-/* Game Board Path Layout */
-.gameboard-container {
+/* Modern Game Path UI */
+.path-container {
   width: 100%;
-  margin: clamp(10px, 3vw, 30px) auto;
-  padding: 0;
+  padding: 0 0 40px;
 }
 
-.gameboard-header {
+.path-loading {
   text-align: center;
-  margin-bottom: clamp(15px, 4vw, 40px);
-}
-
-.gameboard-header h2 {
+  padding: 60px 20px;
   color: #667eea;
-  font-size: clamp(1.3em, 4vw, 2.5em);
-  margin: 0 0 8px 0;
 }
-
-.progress {
-  color: #666;
-  font-size: clamp(0.85em, 2vw, 1.1em);
-  margin: 0;
+.loading-spinner {
+  width: 40px; height: 40px; margin: 0 auto 16px;
+  border: 4px solid #e8e8e8; border-top-color: #667eea;
+  border-radius: 50%; animation: spin 0.8s linear infinite;
 }
+@keyframes spin { to { transform: rotate(360deg); } }
 
-/* Winding Grid Layout - auto-fit for any screen */
-.gameboard-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(120px, 30vw), 1fr));
-  gap: clamp(6px, 1.5vw, 15px);
-  margin-bottom: 30px;
-}
-
-.lesson-tile {
-  aspect-ratio: 1;
-  background: linear-gradient(135deg, #f5f7fa 0%, #e9ecef 100%);
-  border: 2px solid #ddd;
-  border-radius: clamp(8px, 2vw, 15px);
-  padding: clamp(6px, 1.5vw, 15px);
-  cursor: pointer;
-  transition: all 0.3s ease;
+/* Progress Bar */
+.path-progress-bar {
   position: relative;
+  height: 28px;
+  background: #e8e8e8;
+  border-radius: 14px;
+  overflow: hidden;
+  margin-bottom: 20px;
+}
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #4CAF50, #66BB6A, #81C784);
+  border-radius: 14px;
+  transition: width 0.5s ease;
+  min-width: 20px;
+}
+.progress-text {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 12px;
+  font-weight: 700;
+  color: #333;
+  text-shadow: 0 0 4px rgba(255,255,255,0.8);
+}
+
+/* Tribute Button */
+.tribute-btn {
+  display: block;
+  margin: 0 auto 24px;
+  background: linear-gradient(135deg, #ff6b8a, #ff8e9e);
+  color: white;
+  border: none;
+  padding: 8px 20px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+  box-shadow: 0 3px 10px rgba(255,107,138,0.3);
+}
+.tribute-btn:hover {
+  transform: translateY(-2px) scale(1.05);
+  box-shadow: 0 6px 16px rgba(255,107,138,0.4);
+}
+
+/* Learning Path */
+.learning-path {
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
+  gap: 32px;
+}
+
+.path-section {
+  background: #f8f9fe;
+  border-radius: 16px;
+  padding: clamp(16px, 3vw, 24px);
+  border: 2px solid #e8ecf4;
+}
+.section-header h3 {
+  margin: 0 0 16px;
+  font-size: clamp(16px, 2.5vw, 20px);
+  color: #444;
+}
+
+.path-nodes {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(90px, 28vw), 1fr));
+  gap: clamp(10px, 2vw, 16px);
+}
+
+/* Individual Nodes */
+.path-node {
+  display: flex;
+  flex-direction: column;
   align-items: center;
-  text-align: center;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  overflow: hidden;
-  min-width: 0;
+  gap: 6px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  padding: 8px 4px;
+  border-radius: 12px;
+}
+.path-node:hover:not(.locked) {
+  transform: translateY(-4px);
+  background: rgba(102,126,234,0.05);
+}
+.path-node.locked {
+  cursor: not-allowed;
+  opacity: 0.5;
 }
 
-.lesson-tile:hover {
-  transform: translateY(-5px) scale(1.05);
-  box-shadow: 0 8px 16px rgba(102, 126, 234, 0.3);
-  border-color: #667eea;
-}
-
-.lesson-tile.pending {
-  background: linear-gradient(135deg, #f5f7fa 0%, #e9ecef 100%);
-  opacity: 0.85;
-}
-
-.lesson-tile.completed {
-  background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
-  border-color: #28a745;
-  opacity: 1;
-}
-
-.lesson-tile.completed:after {
-  content: '✓';
-  position: absolute;
-  top: 5px;
-  right: 10px;
-  font-size: 1.5em;
-  color: #28a745;
-  font-weight: bold;
-}
-
-.tile-number {
-  font-size: clamp(0.6em, 1.5vw, 0.9em);
-  color: #667eea;
-  font-weight: bold;
-  position: absolute;
-  top: 4px;
-  left: 5px;
-  background: white;
-  width: clamp(18px, 3vw, 24px);
-  height: clamp(18px, 3vw, 24px);
+.node-circle {
+  width: clamp(48px, 8vw, 64px);
+  height: clamp(48px, 8vw, 64px);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
+  font-weight: 700;
+  font-size: clamp(14px, 2.5vw, 18px);
+  transition: all 0.3s;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
 }
 
-.tile-title {
-  font-weight: bold;
-  font-size: clamp(0.65em, 1.8vw, 1.1em);
-  color: #333;
-  margin: clamp(8px, 2vw, 15px) 0 3px 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  word-break: break-word;
+/* Available state - glowing purple */
+.path-node.available .node-circle {
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: white;
+  box-shadow: 0 4px 16px rgba(102,126,234,0.4);
+}
+.path-node.available:hover .node-circle {
+  box-shadow: 0 6px 24px rgba(102,126,234,0.6);
+  transform: scale(1.1);
 }
 
-.tile-difficulty {
-  font-size: clamp(0.6em, 1.3vw, 0.85em);
-  margin: 3px 0;
+/* Completed state - green */
+.path-node.completed .node-circle {
+  background: linear-gradient(135deg, #4CAF50, #66BB6A);
+  color: white;
+  box-shadow: 0 4px 12px rgba(76,175,80,0.3);
+}
+.check-icon { width: 24px; height: 24px; }
+
+/* Locked state */
+.path-node.locked .node-circle {
+  background: #ddd;
+  color: #999;
+  box-shadow: none;
+}
+.lock-icon { width: 20px; height: 20px; }
+
+/* Easter egg nodes */
+.path-node.easter-egg .node-circle {
+  background: linear-gradient(135deg, #ff6b8a, #ff4081);
+  animation: heartbeat 2s ease-in-out infinite;
+}
+.path-node.easter-egg.completed .node-circle {
+  background: linear-gradient(135deg, #e91e63, #f48fb1);
+}
+@keyframes heartbeat {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.08); }
+}
+.easter-sparkle {
+  font-size: 12px;
+  animation: sparkle 1.5s ease-in-out infinite alternate;
+}
+@keyframes sparkle {
+  from { opacity: 0.5; transform: scale(0.8); }
+  to { opacity: 1; transform: scale(1.2); }
 }
 
-.tile-preview {
-  font-size: clamp(0.55em, 1.2vw, 0.8em);
-  color: #666;
-  margin-top: auto;
-  font-style: italic;
+.node-title {
+  font-size: clamp(10px, 1.5vw, 12px);
+  color: #555;
+  text-align: center;
+  max-width: 90px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  max-width: 100%;
 }
+.node-number { font-size: inherit; }
 
-.tile-checkmark {
-  position: absolute;
-  top: 3px;
-  right: 5px;
-  font-size: clamp(1em, 2.5vw, 1.8em);
-  color: #28a745;
-}
-
-/* Lesson Detail Panel */
-.lesson-detail-panel {
+/* Tribute Modal */
+.tribute-overlay {
   position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  background: white;
-  border-top: 3px solid #667eea;
-  padding: 30px;
-  max-height: 50vh;
-  overflow-y: auto;
-  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15);
-  animation: slideUp 0.3s ease;
-  z-index: 100;
-}
-
-@keyframes slideUp {
-  from {
-    transform: translateY(100%);
-  }
-  to {
-    transform: translateY(0);
-  }
-}
-
-.lesson-detail-panel h3 {
-  margin: 0 0 20px 0;
-  color: #667eea;
-  font-size: 1.8em;
-}
-
-.phrases-list {
-  margin-bottom: 20px;
-  max-height: 200px;
-  overflow-y: auto;
-}
-
-.phrase-item {
-  background: #f8f9fa;
-  padding: 15px;
-  margin-bottom: 12px;
-  border-left: 4px solid #667eea;
-  border-radius: 5px;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  backdrop-filter: blur(4px);
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
 }
-
-.phrase-item strong {
-  color: #333;
-  font-size: 1.1em;
-  flex: 1;
-  text-align: left;
-}
-
-.phrase-item span {
-  color: #666;
-  font-size: 0.95em;
-  margin-left: 15px;
-  text-align: right;
-}
-
-.complete-btn {
+.tribute-modal {
+  background: white;
+  border-radius: 20px;
+  padding: clamp(24px, 5vw, 48px);
+  max-width: 440px;
   width: 100%;
-  padding: 15px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  border: none;
-  border-radius: 10px;
-  font-size: 1.1em;
-  font-weight: bold;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-.complete-btn:hover {
-  transform: scale(1.02);
-  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
-}
-
-.complete-btn:active {
-  transform: scale(0.98);
-}
-
-.gameboard-empty {
   text-align: center;
-  padding: 60px 20px;
-  color: #667eea;
-  font-size: 1.3em;
+  position: relative;
+  animation: fadeUp 0.3s ease;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+}
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.tribute-close {
+  position: absolute;
+  top: 12px; right: 16px;
+  background: none; border: none;
+  font-size: 28px; color: #999;
+  cursor: pointer; line-height: 1;
+}
+.tribute-close:hover { color: #333; }
+.tribute-heart {
+  font-size: 48px;
+  margin-bottom: 12px;
+  animation: heartbeat 1.5s ease-in-out infinite;
+}
+.tribute-modal h2 {
+  color: #e91e63;
+  font-size: clamp(22px, 4vw, 28px);
+  margin: 0 0 16px;
+}
+.tribute-text {
+  color: #555;
+  font-size: 15px;
+  line-height: 1.6;
+  margin: 0 0 12px;
+}
+.tribute-signature {
+  margin: 20px 0;
+  padding: 16px;
+  background: linear-gradient(135deg, #fff0f3, #ffe8ec);
+  border-radius: 12px;
+  border: 1px solid #ffc0cb;
+}
+.tribute-signature p {
+  margin: 0 0 4px;
+  color: #e91e63;
+  font-style: italic;
+  font-size: 16px;
+}
+.tribute-from {
+  font-weight: 700;
+  font-style: normal !important;
+  color: #333 !important;
+  margin-top: 8px !important;
+}
+.tribute-footer {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid #eee;
+}
+.tribute-footer p {
+  color: #888;
+  font-size: 13px;
+  margin: 0;
 }
 
-/* Responsive Design */
-@media (max-width: 768px) {
-  .lesson-tile {
-    border-width: 2px;
-  }
-
-  .lesson-detail-panel {
-    max-height: 60vh;
-    padding: 20px;
-  }
-}
-
+/* Responsive */
 @media (max-width: 480px) {
-  .lesson-tile {
-    aspect-ratio: auto;
-    min-height: 80px;
+  .path-nodes {
+    grid-template-columns: repeat(3, 1fr);
   }
-
-  .lesson-detail-panel {
-    max-height: 70vh;
-    padding: 15px;
-  }
-
-  .phrase-item {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  .phrase-item span {
-    margin-left: 0;
-    margin-top: 5px;
-    text-align: left;
-  }
+  .node-title { display: none; }
+  .path-section { padding: 12px; }
 }

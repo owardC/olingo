@@ -505,3 +505,27 @@
     font-size: 2em;
   }
 }
+
+/* Easter Egg Love Notes */
+.easter-egg-note {
+  margin: 16px 0;
+  padding: 16px 20px;
+  background: linear-gradient(135deg, #fff0f3, #ffe8ec);
+  border-radius: 12px;
+  border: 1px solid #ffc0cb;
+  animation: fadeIn 0.5s ease;
+}
+.ee-msg {
+  color: #c2185b;
+  font-style: italic;
+  font-size: 14px;
+  line-height: 1.5;
+  margin: 0 0 8px;
+}
+.ee-from {
+  color: #880e4f;
+  font-weight: 700;
+  font-size: 13px;
+  margin: 0;
+  text-align: right;
+}

@@ -257,6 +257,16 @@ export default function LessonPlayer({ lesson, language, onComplete, onClose }) 
   const [currentIndex, setCurrentIndex] = useState(0)
   const [score, setScore] = useState(0)
   const [finished, setFinished] = useState(false)
+  const [easterEgg, setEasterEgg] = useState(null)
+
+  // Easter egg love notes for Judy
+  const loveNotes = [
+    { msg: "Judy Ha, you make learning Vietnamese feel like falling in love all over again 💕", from: "— Oward" },
+    { msg: "Every word I learn brings me closer to your heart, em ơi 🌸", from: "— Your Oward" },
+    { msg: "Anh yêu em, Judy. You are the reason this app exists 💖", from: "— O" },
+    { msg: "Judy Ha + Oward Cadenas = forever. Thank you for inspiring me 🇻🇳❤️", from: "— Always yours" },
+    { msg: "You taught me that love speaks every language. Em là tất cả của anh 💕", from: "— Oward C." },
+  ]
 
   useEffect(() => {
     if (lesson?.phrases) {
@@ -264,6 +274,7 @@ export default function LessonPlayer({ lesson, language, onComplete, onClose }) 
       setCurrentIndex(0)
       setScore(0)
       setFinished(false)
+      setEasterEgg(null)
     }
   }, [lesson?.id, language])
 
@@ -284,6 +295,10 @@ export default function LessonPlayer({ lesson, language, onComplete, onClose }) 
       setCurrentIndex(i => i + 1)
     } else {
       setFinished(true)
+      // Easter egg: ~20% chance on Vietnamese lessons
+      if (language === 'vietnamese' && Math.random() < 0.2) {
+        setEasterEgg(loveNotes[Math.floor(Math.random() * loveNotes.length)])
+      }
     }
   }
 
@@ -314,6 +329,12 @@ export default function LessonPlayer({ lesson, language, onComplete, onClose }) 
               <div className="complete-icon">🎉</div>
               <h3>Lesson Complete!</h3>
               <p className="score-text">Score: {score}/{exercises.length} correct</p>
+              {easterEgg && (
+                <div className="easter-egg-note">
+                  <p className="ee-msg">{easterEgg.msg}</p>
+                  <p className="ee-from">{easterEgg.from}</p>
+                </div>
+              )}
               <button className="finish-btn" onClick={handleFinish}>
                 Collect +10 XP ✨
               </button>
