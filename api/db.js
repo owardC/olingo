@@ -63,6 +63,17 @@ async function initializeDB() {
         last_reviewed TIMESTAMP,
         UNIQUE(user_id, flashcard_id)
       );
+      CREATE TABLE IF NOT EXISTS user_sessions (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER NOT NULL REFERENCES users(id),
+        ip TEXT,
+        city TEXT,
+        region TEXT,
+        country TEXT,
+        lat REAL,
+        lng REAL,
+        logged_in_at TIMESTAMP DEFAULT NOW()
+      );
     `);
   } finally {
     client.release();

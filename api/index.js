@@ -46,6 +46,22 @@ app.post('/api/signup', async (req, res) => {
   }
 });
 
+app.set('trust proxy', true);
+
+async function getLocationFromIP(ip) {
+  try {
+    // Skip for localhost/private IPs
+    if (!ip || ip === '127.0.0.1' || ip === '::1' || ip.startsWith('192.168.') || ip.startsWith('10.')) {
+      return { city: 'Local', region: 'Dev', country: 'Local', lat: null, lng: null };
+    }
+    const resp = await fetch(`http://ip-api.com/json/${ip}?fields=city,regionName,country,lat,lon`);
+    const data = await resp.json();
+    return { city: data.city, region: data.regionName, country: data.country, lat: data.lat, lng: data.lon };
+  } catch {
+    return { city: null, region: null, country: null, lat: null, lng: null };
+  }
+}
+
 app.post('/api/login', async (req, res) => {
   const { email, password } = req.body;
   if (!email || !password) return res.status(400).json({ error: 'Email and password required' });
@@ -55,6 +71,16 @@ app.post('/api/login', async (req, res) => {
     if (!user) return res.status(401).json({ error: 'Invalid credentials' });
     if (!bcrypt.compareSync(password, user.password_hash)) return res.status(401).json({ error: 'Invalid credentials' });
     const token = jwt.sign({ user_id: user.id, email }, JWT_SECRET, { expiresIn: '30d' });
+
+    // Record session location (non-blocking)
+    const ip = req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.ip;
+    getLocationFromIP(ip).then(loc => {
+      pool.query(
+        'INSERT INTO user_sessions (user_id, ip, city, region, country, lat, lng) VALUES ($1, $2, $3, $4, $5, $6, $7)',
+        [user.id, ip, loc.city, loc.region, loc.country, loc.lat, loc.lng]
+      ).catch(err => console.error('Session log error:', err.message));
+    });
+
     res.json({ ok: true, user_id: user.id, token });
   } catch (err) {
     console.error(err);
@@ -169,6 +195,19 @@ app.get('/api/user/stats', verifyToken, async (req, res) => {
     const result = await pool.query('SELECT xp, streak, email FROM users WHERE id = $1', [req.user.user_id]);
     const user = result.rows[0];
     res.json({ xp: user.xp, streak: user.streak, level: Math.floor(user.xp / 100) + 1, email: user.email });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get('/api/user/sessions', verifyToken, async (req, res) => {
+  try {
+    const result = await pool.query(
+      'SELECT ip, city, region, country, lat, lng, logged_in_at FROM user_sessions WHERE user_id = $1 ORDER BY logged_in_at DESC LIMIT 50',
+      [req.user.user_id]
+    );
+    res.json({ sessions: result.rows });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: err.message });
